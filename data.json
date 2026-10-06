@@ -1,9 +1,9 @@
 {
   "meta": {
-    "last_scan": "2026-10-07 00:31:51 WIB",
-    "discovered": 480,
-    "fetched": 480,
-    "matched": 62,
+    "last_scan": "2026-10-07 01:36:53 WIB",
+    "discovered": 454,
+    "fetched": 454,
+    "matched": 52,
     "errors": 0,
     "workers": 20
   },
@@ -525,106 +525,6 @@
       "author": "Mochammad Reza Rizky Nurahman",
       "published": "30 Sep 2026",
       "published_date": "2026-09-30",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2772518/siswa-smpii-al-abidin-yogyakarta-raih-emas-imseo-2026",
-      "title": "Siswa SMPII Al Abidin Yogyakarta Raih Emas IMSEO 2026",
-      "category": "regional/2772518",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "29 Sep 2026",
-      "published_date": "2026-09-29",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2772524/sdtq-al-abidin-surakarta-boyong-lima-piala-mapsi-tingkat-kecamatan",
-      "title": "SDTQ Al Abidin Surakarta Boyong Lima Piala MAPSI Tingkat Kecamatan",
-      "category": "regional/2772524",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "29 Sep 2026",
-      "published_date": "2026-09-29",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2772459/prof-rofiq-dorong-dmi-hadir-menjawab-persoalan-masyarakat",
-      "title": "Prof Rofiq Dorong DMI Hadir Menjawab Persoalan Masyarakat",
-      "category": "regional/2772459",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "29 Sep 2026",
-      "published_date": "2026-09-29",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2772570/puspaga-solo-luncurkan-gerakan-se-iya-se-kata-cegah-perkawinan-anak",
-      "title": "PUSPAGA Solo Luncurkan Gerakan Se-Iya Se-Kata Cegah Perkawinan Anak",
-      "category": "regional/2772570",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "29 Sep 2026",
-      "published_date": "2026-09-29",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2772479/kh-muhtarom-kembali-pimpin-dmi-surakarta-secara-aklamasi",
-      "title": "KH Muhtarom Kembali Pimpin DMI Surakarta Secara Aklamasi",
-      "category": "regional/2772479",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "29 Sep 2026",
-      "published_date": "2026-09-29",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2772551/haul-ke-115-habib-ali-rental-mobil-solo-raya-banjir-pesanan",
-      "title": "Haul ke-115 Habib Ali, Rental Mobil Solo Raya Banjir Pesanan",
-      "category": "regional/2772551",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "29 Sep 2026",
-      "published_date": "2026-09-29",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2772539/haul-habib-ali-tarif-kamar-naik-tiga-kali-lipat",
-      "title": "Haul Habib Ali, Tarif Kamar Naik Tiga Kali Lipat",
-      "category": "regional/2772539",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "29 Sep 2026",
-      "published_date": "2026-09-29",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2772439/fastlink-cup-2-dorong-potensi-olahraga-lokal-di-sragen",
-      "title": "Fastlink Cup 2 Dorong Potensi Olahraga Lokal di Sragen",
-      "category": "regional/2772439",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "29 Sep 2026",
-      "published_date": "2026-09-29",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2772492/danrem-buka-turnamen-domino-orado-101-piala-panglima-tni-di-solo",
-      "title": "Danrem Buka Turnamen Domino ORADO 101 Piala Panglima TNI di Solo",
-      "category": "regional/2772492",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "29 Sep 2026",
-      "published_date": "2026-09-29",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2772506/danramil-laweyan-dan-anggota-juara-i-turnamen-domino-orado-piala-panglima-tni",
-      "title": "Danramil Laweyan dan Anggota Juara I Turnamen Domino Orado Piala Panglima TNI",
-      "category": "regional/2772506",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "29 Sep 2026",
-      "published_date": "2026-09-29",
       "sifa": true,
       "edwi": false
     }
