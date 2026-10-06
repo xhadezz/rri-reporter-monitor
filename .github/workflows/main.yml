@@ -3,7 +3,7 @@ name: Scan RRI every 6 hours
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 * * * *"
 
 permissions:
   contents: write
