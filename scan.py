@@ -1,6 +1,10 @@
 import json, os, sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
+try:
+    from zoneinfo import ZoneInfo
+except ImportError:
+    ZoneInfo = None
 # Reuse proven RRI discovery/extraction code.
 sys.path.insert(0, os.path.dirname(__file__))
 from scanner_core import discover, fetch_article, ARTICLE_WORKERS
@@ -21,7 +25,7 @@ def main():
         if sifa or edwi:
             articles.append({'url':d['url'],'title':d.get('title','-'),'category':d.get('category','-'),'author':d.get('author','-'),'published':d.get('published',''),'published_date':d.get('published_date',''),'sifa':sifa,'edwi':edwi})
     articles.sort(key=lambda x:(x.get('published_date',''),x.get('title','')), reverse=True)
-    now=datetime.now(timezone.utc).astimezone().strftime('%Y-%m-%d %H:%M:%S %z')
+    now=datetime.now(timezone.utc).astimezone(ZoneInfo('Asia/Jakarta') if ZoneInfo else timezone.utc).strftime('%Y-%m-%d %H:%M:%S WIB')
     data={'meta':{'last_scan':now,'discovered':len(items),'fetched':len(fetched),'matched':len(articles),'errors':errors,'workers':ARTICLE_WORKERS},'articles':articles}
     with open(os.path.join(os.path.dirname(__file__),'data.json'),'w',encoding='utf-8') as f: json.dump(data,f,ensure_ascii=False,indent=2)
     print(json.dumps(data['meta'],ensure_ascii=False))

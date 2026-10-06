@@ -190,7 +190,13 @@ def fetch_article(item):
   meta=soup.find('meta',attrs={'name':'description'}) or soup.find('meta',attrs={'property':'og:description'}); excerpt=clean(safe_attr(meta,'content','')); body=extract_body(soup)
   raw_sifa=int(bool(SIFA_RE.search(html))); body_sifa=int(bool(SIFA_RE.search(body) or SIFA_RE.search(raw_text)))
   raw_edwi=int(bool(EDWI_RE.search(html))); body_edwi=int(bool(EDWI_RE.search(body) or EDWI_RE.search(raw_text)))
-  author_match=int(bool(re.fullmatch(r'soufi\s+a(?:s)?segaf',clean(re.sub(r'[^A-Za-zÀ-ÿ.\s]',' ',author)),re.I)))
-  return {**item,'title':title,'author':author,'published':published,'published_date':published_date,'excerpt':excerpt,'content':body,'raw_sifa':raw_sifa,'body_sifa':body_sifa,'raw_edwi':raw_edwi,'body_edwi':body_edwi,'author_match':author_match,'error':''}
+  author_clean=clean(re.sub(r'[^A-Za-zÀ-ÿ.\s]',' ',author))
+  author_match=int(bool(re.fullmatch(r'soufi\s+a(?:s)?segaf',author_clean,re.I)))
+  # Fallback hanya jika byline/metadata gagal diekstrak: cari pola byline Soufi Asegaf pada halaman.
+  if not author_match:
+   author_match=int(bool(re.search(r'\bOleh\s*[-–—:]\s*Soufi\s+Asegaf\b',raw_text,re.I)))
+  return {**item,'title':title,'author':('Soufi Asegaf' if author_match else author),'published':published,'published_date':published_date,'excerpt':excerpt,'content':body,'raw_sifa':raw_sifa,'body_sifa':body_sifa,'raw_edwi':raw_edwi,'body_edwi':body_edwi,'author_match':author_match,'error':''}
  except Exception as e:
   return {**item,'author':'','published':'','published_date':'','excerpt':'','content':'','raw_sifa':0,'body_sifa':0,'raw_edwi':0,'body_edwi':0,'author_match':0,'error':f'{type(e).__name__}: {e}'}
+
+
