@@ -70,7 +70,6 @@ def discover(max_pages=50):
    page,items,err=f.result()
    if err: errs+=1
    for x in items: all_items[x['url']]=x
-   upd(page=page,discovered=len(all_items),errors=errs,message=f'Mengambil arsip RRI Surakarta... {len(all_items)} URL')
  return list(all_items.values()),errs
 
 
@@ -195,5 +194,3 @@ def fetch_article(item):
   return {**item,'title':title,'author':author,'published':published,'published_date':published_date,'excerpt':excerpt,'content':body,'raw_sifa':raw_sifa,'body_sifa':body_sifa,'raw_edwi':raw_edwi,'body_edwi':body_edwi,'author_match':author_match,'error':''}
  except Exception as e:
   return {**item,'author':'','published':'','published_date':'','excerpt':'','content':'','raw_sifa':0,'body_sifa':0,'raw_edwi':0,'body_edwi':0,'author_match':0,'error':f'{type(e).__name__}: {e}'}
-
-
