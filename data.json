@@ -1,10 +1,10 @@
 {
   "meta": {
-    "last_scan": "2026-10-07 15:36:41 WIB",
-    "discovered": 458,
-    "fetched": 458,
-    "matched": 52,
-    "errors": 0,
+    "last_scan": "2026-10-07 16:35:01 WIB",
+    "discovered": 463,
+    "fetched": 463,
+    "matched": 49,
+    "errors": 24,
     "workers": 20
   },
   "articles": [
@@ -482,36 +482,6 @@
       "url": "https://rri.co.id/surakarta/regional/2776803/sebanyak-3000-nampan-nasi-kebuli-disiapkan-untuk-haul-habib-ali-ke-115",
       "title": "Sebanyak 3.000 Nampan Nasi Kebuli Disiapkan untuk Haul Habib Ali ke-115",
       "category": "regional/2776803",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "30 Sep 2026",
-      "published_date": "2026-09-30",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2776774/sma-abbs-surakarta-bagikan-praktik-pengelolaan-sekolah-ke-yapi-al-azhar",
-      "title": "SMA ABBS Surakarta Bagikan Praktik Pengelolaan Sekolah ke YAPI Al Azhar",
-      "category": "regional/2776774",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "30 Sep 2026",
-      "published_date": "2026-09-30",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2776401/pantang-menyerah-siswa-smp-al-abidin-torehkan-prestasi-matematika",
-      "title": "Pantang Menyerah, Siswa SMP Al Abidin Torehkan Prestasi Matematika",
-      "category": "regional/2776401",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "30 Sep 2026",
-      "published_date": "2026-09-30",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2776363/miss-batik-indonesia-2026-dorong-batik-jadi-gerakan-budaya-anak-muda",
-      "title": "Miss Batik Indonesia 2026 Dorong Batik Jadi Gerakan Budaya Anak Muda",
-      "category": "regional/2776363",
       "author": "Mochammad Reza Rizky Nurahman",
       "published": "30 Sep 2026",
       "published_date": "2026-09-30",
