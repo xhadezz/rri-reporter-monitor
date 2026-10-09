@@ -11,7 +11,7 @@ SIFA_RE=re.compile(r'\(\s*SIFA\s*\)',re.I)
 EDWI_RE=re.compile(r'\(\s*Edwi(?:\s*/\s*Rill)?\s*\)',re.I)
 ARTICLE_RE=re.compile(r'^https://rri\.co\.id/surakarta/(?:[^/?#]+/)*\d+(?:/[^?#]*)?/?$',re.I)
 AUTHOR_TARGET='Soufi Asegaf'
-DISCOVERY_WORKERS=16
+DISCOVERY_WORKERS=4
 ARTICLE_WORKERS=20
 REQUEST_TIMEOUT=(6,20)
 _tls=threading.local()
@@ -43,39 +43,88 @@ def parse_date(text):
  d,mon,y=m.groups(); return f'{int(d):02d} {mon} {y}',f'{y}-{MONTHS.get(mon[:3].title(),"01")}-{int(d):02d}'
 
 
-def discover_one(url,page):
- for attempt in range(3):
-  try:
-   r=http_get(url,headers=HEADERS,timeout=REQUEST_TIMEOUT); r.raise_for_status(); soup=BeautifulSoup(r.text,'html.parser'); out={}
-   for a in soup.find_all('a',href=True):
-    href=normalize_url(a['href'],url)
-    if not ARTICLE_RE.match(href): continue
-    parts=urlsplit(href).path.strip('/').split('/')
-    if len(parts)<3: continue
-    out[href]={'url':href,'title':clean(a.get_text(' ',strip=True)),'category':'/'.join(parts[1:-1])}
-   return page,list(out.values()),''
-  except Exception as e:
-   if attempt==2:return page,[],f'{type(e).__name__}: {e}'
-   time.sleep(.6*(attempt+1))
+def discover_one(url, page):
+    """Ambil satu halaman listing; kembalikan pesan error lengkap untuk diagnosis."""
+    last_error = ""
+    for attempt in range(3):
+        try:
+            r = http_get(
+                url,
+                headers={**HEADERS, "Referer": BASE},
+                timeout=REQUEST_TIMEOUT,
+                allow_redirects=True,
+            )
+            status = r.status_code
+            final_url = r.url
+            content_type = r.headers.get("content-type", "")
+            # Jangan menyembunyikan status HTTP; informasi ini penting untuk diagnosis.
+            if status >= 400:
+                sample = clean((r.text or "")[:180])
+                raise requests.HTTPError(
+                    f"HTTP {status}; requested={url}; final={final_url}; "
+                    f"content-type={content_type}; body={sample!r}"
+                )
+            r.raise_for_status()
+            soup = BeautifulSoup(r.text or "", "html.parser")
+            out = {}
+            for a in soup.find_all('a', href=True):
+                href = normalize_url(a['href'], final_url)
+                if not ARTICLE_RE.match(href):
+                    continue
+                parts = urlsplit(href).path.strip('/').split('/')
+                if len(parts) < 3:
+                    continue
+                out[href] = {
+                    'url': href,
+                    'title': clean(a.get_text(' ', strip=True)),
+                    'category': '/'.join(parts[1:-1]),
+                }
+            # Catat halaman yang berhasil dimuat tetapi tidak punya tautan berita.
+            if not out:
+                title = clean(soup.title.get_text(' ', strip=True)) if soup.title else ''
+                print(
+                    f"Discovery page {page}: HTTP {status}, no article links; "
+                    f"final={final_url}; content-type={content_type}; title={title!r}"
+                )
+            return page, list(out.values()), ''
+        except Exception as e:
+            last_error = f"{type(e).__name__}: {e}"
+            if attempt < 2:
+                time.sleep(1.0 * (attempt + 1))
+    return page, [], last_error
 
 
 def discover(max_pages=50):
- all_items={}; errs=0
- urls=[]
- for p in range(1,max_pages+1): urls.append((LIST_BASE if p==1 else urljoin(LIST_BASE,str(p)),p))
- for p in range(1,min(max_pages,10)+1): urls.append((f'https://rri.co.id/surakarta/berita' if p==1 else f'https://rri.co.id/surakarta/berita/{p}',p))
- with ThreadPoolExecutor(max_workers=DISCOVERY_WORKERS, thread_name_prefix='discover') as ex:
-  fs=[ex.submit(discover_one,u,p) for u,p in urls]
-  for f in as_completed(fs):
-   try:
-    page,items,err=f.result()
-   except Exception as e:
-    errs+=1
-    print(f"Discovery page gagal: {type(e).__name__}: {e}")
-    continue
-   if err: errs+=1
-   for x in items: all_items[x['url']]=x
- return list(all_items.values()),errs
+    all_items = {}
+    errs = 0
+    urls = []
+    for p in range(1, max_pages + 1):
+        urls.append((LIST_BASE if p == 1 else urljoin(LIST_BASE, str(p)), p))
+    for p in range(1, min(max_pages, 10) + 1):
+        urls.append((f'https://rri.co.id/surakarta/berita' if p == 1 else f'https://rri.co.id/surakarta/berita/{p}', p))
+
+    print(f"Discovery dimulai: {len(urls)} URL listing; workers={DISCOVERY_WORKERS}")
+    with ThreadPoolExecutor(max_workers=DISCOVERY_WORKERS, thread_name_prefix='discover') as ex:
+        fs = [ex.submit(discover_one, u, p) for u, p in urls]
+        shown_errors = 0
+        for f in as_completed(fs):
+            try:
+                page, items, err = f.result()
+            except Exception as e:
+                errs += 1
+                if shown_errors < 10:
+                    print(f"Discovery page exception: {type(e).__name__}: {e}")
+                    shown_errors += 1
+                continue
+            if err:
+                errs += 1
+                if shown_errors < 10:
+                    print(f"Discovery page {page} gagal: {err}")
+                    shown_errors += 1
+            for x in items:
+                all_items[x['url']] = x
+    print(f"Discovery selesai: {len(all_items)} URL; error halaman: {errs}")
+    return list(all_items.values()), errs
 
 
 def safe_text(node):
