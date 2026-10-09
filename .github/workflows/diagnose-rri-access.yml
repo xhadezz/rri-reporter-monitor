@@ -1,0 +1,93 @@
+name: Diagnose RRI Access
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Probe RRI pages (read-only)
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          python - <<'PYCODE'
+          import json, re
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError, URLError
+
+          urls = [
+              ('RRI homepage', 'https://rri.co.id/'),
+              ('Global latest list', 'https://rri.co.id/terbaru/list'),
+              ('Surakarta latest list', 'https://rri.co.id/surakarta/terbaru/list/'),
+          ]
+
+          # Add one article URL from the existing data, if the JSON contains one.
+          def find_urls(obj):
+              if isinstance(obj, dict):
+                  for key, value in obj.items():
+                      if isinstance(value, str) and value.startswith('https://rri.co.id/') and re.search(r'/surakarta/.+?/\d+', value):
+                          yield value
+                      else:
+                          yield from find_urls(value)
+              elif isinstance(obj, list):
+                  for value in obj:
+                      yield from find_urls(value)
+
+          data_path = Path('data.json')
+          if data_path.exists():
+              try:
+                  data = json.loads(data_path.read_text(encoding='utf-8'))
+                  article = next(iter(dict.fromkeys(find_urls(data))), None)
+                  if article:
+                      urls.append(('Sample article from data.json', article))
+                  else:
+                      print('ARTICLE CHECK: no Surakarta article URL found in data.json')
+              except Exception as exc:
+                  print(f'ARTICLE CHECK: unable to parse data.json: {type(exc).__name__}: {exc}')
+          else:
+              print('ARTICLE CHECK: data.json not found in repository root')
+
+          headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36', 'Accept': 'text/html,application/xhtml+xml'}
+          for label, url in urls:
+              print('\n' + '=' * 70)
+              print(f'CHECK: {label}')
+              print(f'REQUESTED_URL: {url}')
+              req = Request(url, headers=headers)
+              try:
+                  with urlopen(req, timeout=15) as response:
+                      status = response.status
+                      final_url = response.geturl()
+                      content_type = response.headers.get('Content-Type', '')
+                      body = response.read(50000).decode('utf-8', errors='replace')
+              except HTTPError as exc:
+                  status = exc.code
+                  final_url = exc.geturl()
+                  content_type = exc.headers.get('Content-Type', '') if exc.headers else ''
+                  body = exc.read(50000).decode('utf-8', errors='replace')
+              except (URLError, TimeoutError, OSError) as exc:
+                  print(f'ERROR: {type(exc).__name__}: {exc}')
+                  continue
+              title_match = re.search(r'<title[^>]*>(.*?)</title>', body, re.I | re.S)
+              title = re.sub(r'\s+', ' ', title_match.group(1)).strip() if title_match else '(no HTML title found in first 50 KB)'
+              snippet = re.sub(r'\s+', ' ', body[:350]).strip()
+              print(f'STATUS: {status}')
+              print(f'FINAL_URL: {final_url}')
+              print(f'CONTENT_TYPE: {content_type}')
+              print(f'TITLE: {title[:250]}')
+              print(f'BODY_SNIPPET: {snippet[:350]}')
+          print('\nDiagnostic finished. No repository files were changed.')
+          PYCODE
