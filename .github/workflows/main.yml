@@ -1,3 +1,4 @@
+
 name: Scan RRI setiap 1 jam
 
 on:
@@ -33,15 +34,21 @@ jobs:
         run: python scan.py
 
       - name: Tampilkan hasil scanner
+        if: always()
         run: |
-          python - <<'PY'
+          if [ -f data.json ]; then
+            python - <<'PY'
           import json
-          with open('data.json', encoding='utf-8') as f:
+          with open("data.json", encoding="utf-8") as f:
               data = json.load(f)
-          print(json.dumps(data.get('meta', {}), ensure_ascii=False, indent=2))
+          print(json.dumps(data.get("meta", {}), ensure_ascii=False, indent=2))
           PY
+          else
+            echo "data.json belum tersedia"
+          fi
 
       - name: Simpan hasil scan
+        if: success()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
