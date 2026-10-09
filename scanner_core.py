@@ -34,7 +34,9 @@ def clean(s): return re.sub(r'\s+',' ',s or '').strip()
 
 
 def normalize_url(href,base):
- u=urljoin(base,href).split('#')[0]; p=urlsplit(u); return urlunsplit((p.scheme,p.netloc,p.path.rstrip('/'),'',''))
+ u=urljoin(base,href).split('#')[0]; p=urlsplit(u)
+ path=re.sub(r'^/index\.php(?=/)', '', p.path, flags=re.I)
+ return urlunsplit((p.scheme,p.netloc,path.rstrip('/'),'',''))
 
 
 def parse_date(text):
@@ -43,55 +45,67 @@ def parse_date(text):
  d,mon,y=m.groups(); return f'{int(d):02d} {mon} {y}',f'{y}-{MONTHS.get(mon[:3].title(),"01")}-{int(d):02d}'
 
 
+def listing_fallback_url(page):
+    """Jalur listing resmi alternatif RRI; bukan mekanisme melewati challenge."""
+    suffix = '' if page == 1 else f'/{page}'
+    return f'https://rri.co.id/index.php/surakarta/terbaru/list{suffix}'
+
+
 def discover_one(url, page):
-    """Ambil satu halaman listing; kembalikan pesan error lengkap untuk diagnosis."""
-    last_error = ""
-    for attempt in range(3):
-        try:
-            r = http_get(
-                url,
-                headers={**HEADERS, "Referer": BASE},
-                timeout=REQUEST_TIMEOUT,
-                allow_redirects=True,
-            )
-            status = r.status_code
-            final_url = r.url
-            content_type = r.headers.get("content-type", "")
-            # Jangan menyembunyikan status HTTP; informasi ini penting untuk diagnosis.
-            if status >= 400:
-                sample = clean((r.text or "")[:180])
-                raise requests.HTTPError(
-                    f"HTTP {status}; requested={url}; final={final_url}; "
-                    f"content-type={content_type}; body={sample!r}"
+    """Ambil listing utama, lalu coba rute listing resmi alternatif jika gagal."""
+    candidates = [url]
+    fallback = listing_fallback_url(page)
+    if fallback != url:
+        candidates.append(fallback)
+    errors = []
+    for candidate in candidates:
+        for attempt in range(2):
+            try:
+                r = http_get(
+                    candidate,
+                    headers={**HEADERS, "Referer": BASE},
+                    timeout=REQUEST_TIMEOUT,
+                    allow_redirects=True,
                 )
-            r.raise_for_status()
-            soup = BeautifulSoup(r.text or "", "html.parser")
-            out = {}
-            for a in soup.find_all('a', href=True):
-                href = normalize_url(a['href'], final_url)
-                if not ARTICLE_RE.match(href):
-                    continue
-                parts = urlsplit(href).path.strip('/').split('/')
-                if len(parts) < 3:
-                    continue
-                out[href] = {
-                    'url': href,
-                    'title': clean(a.get_text(' ', strip=True)),
-                    'category': '/'.join(parts[1:-1]),
-                }
-            # Catat halaman yang berhasil dimuat tetapi tidak punya tautan berita.
-            if not out:
-                title = clean(soup.title.get_text(' ', strip=True)) if soup.title else ''
-                print(
-                    f"Discovery page {page}: HTTP {status}, no article links; "
-                    f"final={final_url}; content-type={content_type}; title={title!r}"
-                )
-            return page, list(out.values()), ''
-        except Exception as e:
-            last_error = f"{type(e).__name__}: {e}"
-            if attempt < 2:
-                time.sleep(1.0 * (attempt + 1))
-    return page, [], last_error
+                status = r.status_code
+                final_url = r.url
+                content_type = r.headers.get("content-type", "")
+                if status >= 400:
+                    sample = clean((r.text or "")[:180])
+                    raise requests.HTTPError(
+                        f"HTTP {status}; requested={candidate}; final={final_url}; "
+                        f"content-type={content_type}; body={sample!r}"
+                    )
+                r.raise_for_status()
+                soup = BeautifulSoup(r.text or "", "html.parser")
+                out = {}
+                for a in soup.find_all('a', href=True):
+                    href = normalize_url(a['href'], final_url)
+                    if not ARTICLE_RE.match(href):
+                        continue
+                    parts = urlsplit(href).path.strip('/').split('/')
+                    if len(parts) < 3:
+                        continue
+                    out[href] = {
+                        'url': href,
+                        'title': clean(a.get_text(' ', strip=True)),
+                        'category': '/'.join(parts[1:-1]),
+                    }
+                if not out:
+                    title = clean(soup.title.get_text(' ', strip=True)) if soup.title else ''
+                    errors.append(f"HTTP {status} no article links; final={final_url}; title={title!r}")
+                    break
+                if candidate != url:
+                    print(f"Discovery page {page}: berhasil memakai jalur alternatif resmi {candidate}")
+                return page, list(out.values()), ''
+            except Exception as e:
+                errors.append(f"{type(e).__name__}: {e}")
+                # 403 challenge tidak akan terbantu oleh retry berulang pada URL sama.
+                if 'HTTP 403' in str(e):
+                    break
+                if attempt < 1:
+                    time.sleep(1.0 * (attempt + 1))
+    return page, [], ' || '.join(errors)
 
 
 def discover(max_pages=50):
