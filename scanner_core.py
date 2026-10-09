@@ -67,7 +67,12 @@ def discover(max_pages=50):
  with ThreadPoolExecutor(max_workers=DISCOVERY_WORKERS, thread_name_prefix='discover') as ex:
   fs=[ex.submit(discover_one,u,p) for u,p in urls]
   for f in as_completed(fs):
-   page,items,err=f.result()
+   try:
+    page,items,err=f.result()
+   except Exception as e:
+    errs+=1
+    print(f"Discovery page gagal: {type(e).__name__}: {e}")
+    continue
    if err: errs+=1
    for x in items: all_items[x['url']]=x
  return list(all_items.values()),errs
