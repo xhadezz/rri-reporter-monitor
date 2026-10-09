@@ -1,0 +1,23 @@
+name: Diagnose RRI with curl_cffi
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install diagnostic dependencies
+        run: pip install curl_cffi beautifulsoup4
+      - name: Probe RRI using curl_cffi (read-only)
+        run: python diagnose_curl_cffi.py
