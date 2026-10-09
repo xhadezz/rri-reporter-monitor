@@ -1,14 +1,34 @@
 {
   "meta": {
-    "last_scan": "2026-10-09 18:32:04 WIB",
-    "discovered": 414,
-    "fetched": 414,
-    "matched": 43,
+    "last_scan": "2026-10-10 03:32:37 WIB",
+    "discovered": 403,
+    "fetched": 403,
+    "matched": 38,
     "errors": 0,
     "workers": 20,
     "status": "success"
   },
   "articles": [
+    {
+      "url": "https://rri.co.id/surakarta/regional/2800459/sma-abbs-surakarta-gelar-tasmi-akbar-10-juz-sekali-duduk",
+      "title": "SMA ABBS Surakarta Gelar Tasmi’ Akbar 10 Juz Sekali Duduk",
+      "category": "regional",
+      "author": "Mochammad Reza Rizky Nurahman",
+      "published": "10 Okt 2026",
+      "published_date": "2026-10-10",
+      "sifa": true,
+      "edwi": false
+    },
+    {
+      "url": "https://rri.co.id/surakarta/regional/2800457/sma-abbs-karanganyar-gelar-opera-perkuat-kolaborasi-dengan-orang-tua",
+      "title": "SMA ABBS Karanganyar Gelar OPERA, Perkuat Kolaborasi dengan Orang Tua",
+      "category": "regional",
+      "author": "Mochammad Reza Rizky Nurahman",
+      "published": "10 Okt 2026",
+      "published_date": "2026-10-10",
+      "sifa": true,
+      "edwi": false
+    },
     {
       "url": "https://rri.co.id/surakarta/regional/2796379/zhafran-ozil-raih-dua-medali-di-taekwondo-indonesia-super-fight-4",
       "title": "Zhafran Ozil Raih Dua Medali di Taekwondo Indonesia Super Fight 4",
@@ -368,76 +388,6 @@
       "published_date": "2026-10-03",
       "sifa": false,
       "edwi": true
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2783294/ums-jadi-peringkat-1-pts-dan-peringkat-5-nasional-dalam-the-wur-2027",
-      "title": "UMS Jadi Peringkat 1 PTS dan Peringkat 5 Nasional dalam THE WUR 2027",
-      "category": "regional",
-      "author": "Soufi Asegaf",
-      "published": "02 Okt 2026",
-      "published_date": "2026-10-02",
-      "sifa": false,
-      "edwi": true
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2783209/studi-tiru-ke-sma-abbs-sekolah-jepara-pelajari-kurikulum-cambridge",
-      "title": "Studi Tiru ke SMA ABBS, Sekolah Jepara Pelajari Kurikulum Cambridge",
-      "category": "regional",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "02 Okt 2026",
-      "published_date": "2026-10-02",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2783198/sebanyak-10000-jemaah-pasuruan-bakal-hadiri-haul-solo-ke-115",
-      "title": "Sebanyak 10.000 Jemaah Pasuruan Bakal Hadiri Haul Solo ke-115",
-      "category": "regional",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "02 Okt 2026",
-      "published_date": "2026-10-02",
-      "sifa": true,
-      "edwi": false
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2783313/rektor-ums-berikan-penguatan-kepada-mahasiswa-dpl-dari-14-pt-indonesia-di-malaysia",
-      "title": "Rektor UMS Berikan Penguatan kepada Mahasiswa-DPL dari 14 PT Indonesia di Malaysia",
-      "category": "regional",
-      "author": "Soufi Asegaf",
-      "published": "02 Okt 2026",
-      "published_date": "2026-10-02",
-      "sifa": false,
-      "edwi": true
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2783331/prodi-arsitektur-ums-gelar-pelatihan-i-tree-pertama-kalinya-untuk-ukur-kinerja",
-      "title": "Prodi Arsitektur UMS Gelar Pelatihan i-Tree Pertama Kalinya untuk Ukur Kinerja",
-      "category": "regional",
-      "author": "Soufi Asegaf",
-      "published": "02 Okt 2026",
-      "published_date": "2026-10-02",
-      "sifa": false,
-      "edwi": true
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2783323/mahasiswa-ums-raih-silver-medal-wice-2026",
-      "title": "Mahasiswa UMS Raih Silver Medal WICE 2026",
-      "category": "regional",
-      "author": "Soufi Asegaf",
-      "published": "02 Okt 2026",
-      "published_date": "2026-10-02",
-      "sifa": false,
-      "edwi": true
-    },
-    {
-      "url": "https://rri.co.id/surakarta/regional/2783182/koni-solo-matangkan-persiapan-porprov-2026-bonus-atlet-masih-dirahasiakan",
-      "title": "KONI Solo Matangkan Persiapan Porprov 2026, Bonus Atlet Masih Dirahasiakan",
-      "category": "regional",
-      "author": "Mochammad Reza Rizky Nurahman",
-      "published": "02 Okt 2026",
-      "published_date": "2026-10-02",
-      "sifa": true,
-      "edwi": false
     }
   ]
 }
