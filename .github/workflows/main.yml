@@ -1,10 +1,9 @@
-
-name: Scan RRI setiap 1 jam
+name: Scan RRI setiap 8 jam
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "17 */8 * * *"
 
 permissions:
   contents: write
