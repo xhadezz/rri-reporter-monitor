@@ -108,10 +108,72 @@ def discover_one(url, page):
     return page, [], ' || '.join(errors)
 
 
-def discover_google_news_rss(max_days=90):
-    """Fallback discovery via Google News RSS search results."""
-    from datetime import datetime, timedelta
+def _article_item(url, title=''):
+    """Normalize a discovered RRI URL into a listing-like item."""
+    try:
+        url = normalize_url(url, 'https://rri.co.id/')
+        if not ARTICLE_RE.match(url):
+            return None
+        parts = urlsplit(url).path.strip('/').split('/')
+        return {'url': url, 'title': clean(title), 'category': '/'.join(parts[1:-1])}
+    except Exception:
+        return None
+
+
+def discover_bing_news_rss(max_days=90):
+    """Fallback via Bing News RSS, whose item links may point directly to publishers."""
     from urllib.parse import quote
+    queries = [
+        'site:rri.co.id/surakarta',
+        'site:rri.co.id/surakarta/regional',
+        'site:rri.co.id/surakarta/ekonomi',
+        'site:rri.co.id/surakarta/budaya',
+        'site:rri.co.id/surakarta/iptek',
+    ]
+    found = {}
+    for query in queries:
+        rss_url = 'https://www.bing.com/news/search?q=' + quote(query) + '&format=rss'
+        try:
+            response = http_get(rss_url, timeout=REQUEST_TIMEOUT, allow_redirects=True)
+            response.raise_for_status()
+            root = ET.fromstring(response.content)
+            for item in root.findall('.//item'):
+                title = clean(item.findtext('title', ''))
+                links = [clean(item.findtext('link', ''))]
+                desc = item.findtext('description', '') or ''
+                for href in re.findall(r'href=[\"\']([^\"\']+)[\"\']', html.unescape(desc), re.I):
+                    links.append(html.unescape(href))
+                for link in links:
+                    if not link:
+                        continue
+                    parsed = urlsplit(link)
+                    candidate = None
+                    if parsed.netloc.lower().endswith('rri.co.id'):
+                        candidate = link
+                    elif 'bing.com' in parsed.netloc.lower():
+                        # Some RSS variants wrap the publisher URL in a query parameter.
+                        from urllib.parse import parse_qs
+                        qs = parse_qs(parsed.query)
+                        for vals in qs.values():
+                            for val in vals:
+                                if 'rri.co.id/surakarta/' in val:
+                                    candidate = val
+                                    break
+                            if candidate:
+                                break
+                    if candidate:
+                        row = _article_item(candidate, title)
+                        if row:
+                            found[row['url']] = row
+        except Exception as exc:
+            print(f'RSS Bing fallback gagal ({query}): {type(exc).__name__}: {exc}')
+    return list(found.values())
+
+
+def discover_google_news_rss(max_days=90):
+    """Fallback via Google News RSS; resolve publisher links where possible."""
+    from urllib.parse import quote, parse_qs
+    from datetime import datetime, timedelta
 
     since = (datetime.utcnow() - timedelta(days=max_days)).strftime('%Y-%m-%d')
     queries = [
@@ -119,6 +181,7 @@ def discover_google_news_rss(max_days=90):
         f'site:rri.co.id/surakarta/regional after:{since}',
         f'site:rri.co.id/surakarta/ekonomi after:{since}',
         f'site:rri.co.id/surakarta/budaya after:{since}',
+        f'site:rri.co.id/surakarta/iptek after:{since}',
     ]
     found = {}
     for query in queries:
@@ -129,25 +192,37 @@ def discover_google_news_rss(max_days=90):
             root = ET.fromstring(response.content)
             for item in root.findall('.//item'):
                 title = clean(item.findtext('title', ''))
-                links = []
-                item_link = clean(item.findtext('link', ''))
-                if item_link:
-                    links.append(item_link)
+                links = [clean(item.findtext('link', ''))]
                 description = item.findtext('description', '') or ''
-                for href in re.findall("href=[\"']([^\"']+)[\"']", html.unescape(description), re.I):
-                    links.append(href)
+                for href in re.findall(r'href=[\"\']([^\"\']+)[\"\']', html.unescape(description), re.I):
+                    links.append(html.unescape(href))
+                source = item.find('source')
+                source_url = source.get('url', '') if source is not None else ''
+                if 'rri.co.id' in source_url:
+                    links.append(source_url)
                 for link in links:
-                    link = html.unescape(link).replace('&amp;', '&')
-                    if 'rri.co.id' not in link:
+                    if not link:
                         continue
-                    url = normalize_url(link, 'https://rri.co.id/')
-                    if ARTICLE_RE.match(url):
-                        parts = urlsplit(url).path.strip('/').split('/')
-                        found[url] = {'url': url, 'title': title, 'category': '/'.join(parts[1:-1])}
+                    link = html.unescape(link).replace('&amp;', '&')
+                    parsed = urlsplit(link)
+                    candidate = link if parsed.netloc.lower().endswith('rri.co.id') else None
+                    # Google News RSS links may wrap the original URL in query parameters.
+                    if not candidate and 'news.google.com' in parsed.netloc.lower():
+                        qs = parse_qs(parsed.query)
+                        for vals in qs.values():
+                            for val in vals:
+                                if 'rri.co.id/surakarta/' in val:
+                                    candidate = val
+                                    break
+                            if candidate:
+                                break
+                    if candidate:
+                        row = _article_item(candidate, title)
+                        if row:
+                            found[row['url']] = row
         except Exception as exc:
-            print(f'RSS fallback gagal ({query}): {type(exc).__name__}: {exc}')
+            print(f'RSS Google News fallback gagal ({query}): {type(exc).__name__}: {exc}')
     return list(found.values())
-
 
 def discover_sitemaps():
     """Fallback to publicly exposed XML sitemaps."""
@@ -205,13 +280,22 @@ def discover(max_pages=50):
     # Jika listing utama diblokir atau gagal sebagian, gunakan sumber publik alternatif.
     # Jangan menganggap 0 URL sebagai scan sukses.
     if not all_items or errs:
-        rss_items = discover_google_news_rss(max_days=90)
-        added_rss = 0
-        for item in rss_items:
+        bing_items = discover_bing_news_rss(max_days=90)
+        added_bing = 0
+        for item in bing_items:
             if item['url'] not in all_items:
                 all_items[item['url']] = item
-                added_rss += 1
-        print(f"Fallback Google News RSS: {len(rss_items)} URL; {added_rss} URL baru")
+                added_bing += 1
+        print(f"Fallback Bing News RSS: {len(bing_items)} URL; {added_bing} URL baru")
+
+        google_items = discover_google_news_rss(max_days=90)
+        added_google = 0
+        for item in google_items:
+            if item['url'] not in all_items:
+                all_items[item['url']] = item
+                added_google += 1
+        print(f"Fallback Google News RSS: {len(google_items)} URL; {added_google} URL baru")
+
         if not all_items:
             sitemap_items = discover_sitemaps()
             added_sitemap = 0
