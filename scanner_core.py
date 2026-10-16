@@ -1,4 +1,4 @@
-import requests, re, json, threading, time
+import requests, re, json, threading, time, html, xml.etree.ElementTree as ET
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlsplit, urlunsplit
@@ -108,6 +108,71 @@ def discover_one(url, page):
     return page, [], ' || '.join(errors)
 
 
+def discover_google_news_rss(max_days=90):
+    """Fallback discovery via Google News RSS search results."""
+    from datetime import datetime, timedelta
+    from urllib.parse import quote
+
+    since = (datetime.utcnow() - timedelta(days=max_days)).strftime('%Y-%m-%d')
+    queries = [
+        f'site:rri.co.id/surakarta after:{since}',
+        f'site:rri.co.id/surakarta/regional after:{since}',
+        f'site:rri.co.id/surakarta/ekonomi after:{since}',
+        f'site:rri.co.id/surakarta/budaya after:{since}',
+    ]
+    found = {}
+    for query in queries:
+        rss_url = 'https://news.google.com/rss/search?q=' + quote(query) + '&hl=id&gl=ID&ceid=ID:id'
+        try:
+            response = http_get(rss_url, timeout=REQUEST_TIMEOUT, allow_redirects=True)
+            response.raise_for_status()
+            root = ET.fromstring(response.content)
+            for item in root.findall('.//item'):
+                title = clean(item.findtext('title', ''))
+                links = []
+                item_link = clean(item.findtext('link', ''))
+                if item_link:
+                    links.append(item_link)
+                description = item.findtext('description', '') or ''
+                for href in re.findall("href=[\"']([^\"']+)[\"']", html.unescape(description), re.I):
+                    links.append(href)
+                for link in links:
+                    link = html.unescape(link).replace('&amp;', '&')
+                    if 'rri.co.id' not in link:
+                        continue
+                    url = normalize_url(link, 'https://rri.co.id/')
+                    if ARTICLE_RE.match(url):
+                        parts = urlsplit(url).path.strip('/').split('/')
+                        found[url] = {'url': url, 'title': title, 'category': '/'.join(parts[1:-1])}
+        except Exception as exc:
+            print(f'RSS fallback gagal ({query}): {type(exc).__name__}: {exc}')
+    return list(found.values())
+
+
+def discover_sitemaps():
+    """Fallback to publicly exposed XML sitemaps."""
+    candidates = ['https://rri.co.id/sitemap.xml', 'https://rri.co.id/sitemap_index.xml', 'https://rri.co.id/sitemap-index.xml']
+    found = {}
+    for sitemap_url in candidates:
+        try:
+            response = http_get(sitemap_url, timeout=REQUEST_TIMEOUT, allow_redirects=True)
+            response.raise_for_status()
+            root = ET.fromstring(response.content)
+            for node in root.iter():
+                if node.tag.split('}')[-1].lower() != 'loc' or not node.text:
+                    continue
+                loc = html.unescape(node.text.strip())
+                if 'rri.co.id' not in loc:
+                    continue
+                url = normalize_url(loc, 'https://rri.co.id/')
+                if ARTICLE_RE.match(url):
+                    parts = urlsplit(url).path.strip('/').split('/')
+                    found[url] = {'url': url, 'title': '', 'category': '/'.join(parts[1:-1])}
+        except Exception as exc:
+            print(f'Sitemap fallback gagal ({sitemap_url}): {type(exc).__name__}: {exc}')
+    return list(found.values())
+
+
 def discover(max_pages=50):
     all_items = {}
     errs = 0
@@ -137,6 +202,24 @@ def discover(max_pages=50):
                     shown_errors += 1
             for x in items:
                 all_items[x['url']] = x
+    # Jika listing utama diblokir atau gagal sebagian, gunakan sumber publik alternatif.
+    # Jangan menganggap 0 URL sebagai scan sukses.
+    if not all_items or errs:
+        rss_items = discover_google_news_rss(max_days=90)
+        added_rss = 0
+        for item in rss_items:
+            if item['url'] not in all_items:
+                all_items[item['url']] = item
+                added_rss += 1
+        print(f"Fallback Google News RSS: {len(rss_items)} URL; {added_rss} URL baru")
+        if not all_items:
+            sitemap_items = discover_sitemaps()
+            added_sitemap = 0
+            for item in sitemap_items:
+                if item['url'] not in all_items:
+                    all_items[item['url']] = item
+                    added_sitemap += 1
+            print(f"Fallback sitemap: {len(sitemap_items)} URL; {added_sitemap} URL baru")
     print(f"Discovery selesai: {len(all_items)} URL; error halaman: {errs}")
     return list(all_items.values()), errs
 
